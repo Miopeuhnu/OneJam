@@ -5,8 +5,15 @@ using UnityEngine;
 public class ArmsController : MonoBehaviour
 {
     public float speed;
+    public float jumpForce = 20f;
+    float jumpTimeCounter;
+    public float jumpTime;
+    bool isJumping;
     float horizontal;
+    
     Rigidbody2D rigidbody2d;
+    public Transform feet;
+    public LayerMask groundLayer;
     Animator animator;
     Vector2 movement;
     // Start is called before the first frame update
@@ -20,35 +27,59 @@ public class ArmsController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        horizontal = Input.GetAxis("Horizontal");
-        if (horizontal != 0)
+        if (Input.GetKeyDown(KeyCode.Space)&&IsGrounded())
         {
-            animator.SetBool("IsMoving", true);
+            rigidbody2d.velocity = new Vector2(rigidbody2d.velocity.x, jumpForce);
+            isJumping = true;
+            jumpTimeCounter = jumpTime;
         }
-        else
+        if (Input.GetKey(KeyCode.Space))
         {
-            animator.SetBool("IsMoving", false);
+            if (jumpTimeCounter > 0 && isJumping == true)
+            {
+                rigidbody2d.velocity = new Vector2(rigidbody2d.velocity.x, jumpForce);
+                jumpTimeCounter -= Time.deltaTime;
+            }
+            else
+            {
+                isJumping = false;
+            }
         }
-        if (horizontal < 0)
+        if(Input.GetKeyUp(KeyCode.Space))
         {
-            animator.SetBool("LookRight", false);
-            animator.SetBool("LookLeft", true);
+            isJumping = false;
         }
-        else if(horizontal >= 0);
-        {
-            animator.SetBool("LookRight", true);
-            animator.SetBool("LookLeft", false);
-        }
-
 
     }
     void FixedUpdate()
     {
-        Vector2 position = transform.position;
-        position.x = position.x + speed * horizontal * Time.deltaTime;
+        horizontal = Input.GetAxisRaw("Horizontal");
+        Vector2 movement = new Vector2(horizontal * speed, rigidbody2d.velocity.y);
+        rigidbody2d.velocity = movement;
         animator.SetFloat("MoveX", horizontal);
-        rigidbody2d.MovePosition(position);
+        Debug.Log(horizontal);
        
 
     }
+    void Jump()
+    {
+        Vector2 movement = new Vector2(rigidbody2d.velocity.x, jumpForce);
+        rigidbody2d.velocity = movement;
+        Debug.Log("Jump");
+    }
+    public bool IsGrounded()
+    {
+        Collider2D groundCheck = Physics2D.OverlapCircle(feet.position, 0.2f, groundLayer);
+        if(groundCheck != null)
+        {
+            Debug.Log("is grounded");
+            return true;
+            
+        }
+        else
+        {
+            return false;
+        }
+    }
 }
+
